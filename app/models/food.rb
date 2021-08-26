@@ -1,4 +1,4 @@
-class Food < ActiveRecord
+class Food < ApplicationRecord
   belongs_to :restaurant
   belongs_to :order, optional: true
   # optional: trueはbelongs_toの外部キーのnilを許可するもの
