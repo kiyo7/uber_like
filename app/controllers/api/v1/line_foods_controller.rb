@@ -1,7 +1,7 @@
 module Api
   module V1
     class LineFoodsController < ApplicationController
-      before_action :set_food, only: %i[create, replace]
+      before_action :set_food, only: %i(create replace)
 
       def index
         line_foods = LineFood.active #全てのLineFoodモデルの中から、active: trueのものを取得して、line_foodsという変数に代入している
@@ -36,20 +36,20 @@ module Api
         end
       end
         
-        def replace
+         def replace
           LineFood.active.other_restaurant(@ordered_food.restaurant.id).each do |line_food|
-            line_food.update_attribute(:active, false) #他店舗のactiveなLineFoodを一つずつactiveをfalseにする
+            line_food.update_attribute(:active, false)
         end
 
         #mapとeachの違い  mapは配列を返すのに対し、eachはただ繰り返し処理を行うだけ(配列は返さない)
 
         set_line_food(@ordered_food)
 
-        if @line_food.save
-          render json: {
-            line_food: @line_food
-          }, status: :created
-        else
+      if @line_food.save
+        render json: {
+         line_food: @line_food
+        }, status: :created
+      else
           render json: {}, status: :internal_server_error
         end
       end

@@ -2,15 +2,19 @@ import React, { useEffect, useReducer, useState } from 'react';
 
 import styled from 'styled-components';
 
-import { Link } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 
 //api
 import { fetchFoods } from '../apis/foods'; //特定のレストランの商品一覧を叩きにいく関数
+// 仮注文データ(商品名、個数)を登録するAPI
+//仮注文の際に別店舗の商品データが残っていた場合に新しい店舗データに置き換える(更新する)API
+import { postLineFoods, replaceLineFoods } from '../apis/line_foods';
 
 //components
 import { LocalMallIcon } from '../components/Icons';
 import { FoodWrapper } from '../components/FoodWrapper';
 import { FoodOrderDialog } from '../components/FoodOrderDialog';
+import { NewOrderConfirmDialog } from '../components/NewOrderConfirmDialog';
 import Skeleton from '@material-ui/lab/Skeleton';
 
 //reducers
@@ -27,6 +31,7 @@ import FoodImage from '../images/food-image.jpg';
 //constants
 import { COLORS } from '../style_constants';
 import { REQUEST_STATE } from '../constants';
+import { HTTP_STATUS_CODE } from '../constants';
 
 const HeaderWrapper = styled.div`
   display: flex;
@@ -57,20 +62,21 @@ const ItemWrapper = styled.div`
   margin: 16px;
 `;
 
-const submitOrder = () => {
-  console.log('注文されたで');
-};
-
 export const Foods = ({ match }) => {
-  const [foodsState, dispatch] = useReducer(foodsReducer, foodsInitialState);
-
   const initialState = {
     isOpenOrderDialog: false,
     selectedFood: null,
     selectedFoodCount: 1,
+    isOpenNewOrderDialog: false,
+    existingRestaurantName: '',
+    newRestaurantName: '',
   };
 
   const [state, setState] = useState(initialState);
+
+  const [foodsState, dispatch] = useReducer(foodsReducer, foodsInitialState);
+
+  const history = useHistory();
 
   useEffect(() => {
     dispatch({ type: foodsActionTypes.FETCHING });
@@ -83,6 +89,37 @@ export const Foods = ({ match }) => {
       });
     });
   }, [match.params.restaurantsId]);
+
+  const submitOrder = () => {
+    //API関数にパラメーターを渡す
+    postLineFoods({
+      foodId: state.selectedFood.id,
+      count: state.selectedFoodCount,
+    })
+      .then(() => history.push('/orders')) //成功:'/orders'に飛ばす
+      .catch((e) => {
+        if (e.response.status === HTTP_STATUS_CODE.NOT_ACCEPTABLE) {
+          //失敗して、エラー番号406番の場合FoodOrderDialogを閉じて、NewOrderConfirmDialogを開き、必要な情報をeオブジェクトから取得してstateにセット
+          setState({
+            ...state,
+            isOpenOrderDialog: false,
+            isOpenNewOrderDialog: true,
+            existingRestaurantName: e.response.data.existing_restaurant,
+            newRestaurantName: e.response.data.new_restaurant,
+          });
+        } else {
+          throw e;
+        }
+      });
+  };
+
+  //実際に新しいデータに置き換える関数
+  const replaceOrder = () => {
+    replaceLineFoods({
+      foodId: state.selectedFood.id,
+      count: state.selectedFoodCount,
+    }).then(() => history.push('/orders'));
+  };
 
   return (
     <>
@@ -151,6 +188,20 @@ export const Foods = ({ match }) => {
           }
           countNumber={state.selectedFoodCount}
           onClickOrder={() => submitOrder()}
+        />
+      )}
+      {state.isOpenNewOrderDialog && (
+        <NewOrderConfirmDialog
+          isOpen={state.isOpenNewOrderDialog}
+          onClose={() =>
+            setState({
+              ...state,
+              isOpenOrderDialog: false,
+            })
+          }
+          existingRestaurantName={state.existingRestaurantName}
+          newRestaurantName={state.newRestaurantName}
+          onClickSubmit={() => replaceOrder()}
         />
       )}
     </>

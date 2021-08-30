@@ -80,6 +80,9 @@ export const FoodOrderDialog = ({
             />
           </CountItem>
           <CountItem>
+            <CountNum>{countNumber}</CountNum>
+          </CountItem>
+          <CountItem>
             <CountUpButton
               onClick={() => onClickCountUp()}
               isDisabled={countNumber >= 9}
