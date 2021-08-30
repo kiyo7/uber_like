@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer } from 'react';
+import React, { useEffect, useReducer, useState } from 'react';
 
 import styled from 'styled-components';
 
@@ -10,6 +10,7 @@ import { fetchFoods } from '../apis/foods'; //特定のレストランの商品�
 //components
 import { LocalMallIcon } from '../components/Icons';
 import { FoodWrapper } from '../components/FoodWrapper';
+import { FoodOrderDialog } from '../components/FoodOrderDialog';
 import Skeleton from '@material-ui/lab/Skeleton';
 
 //reducers
@@ -59,6 +60,14 @@ const ItemWrapper = styled.div`
 export const Foods = ({ match }) => {
   const [foodsState, dispatch] = useReducer(foodsReducer, foodsInitialState);
 
+  const initialState = {
+    isOpenOrderDialog: false,
+    selectedFood: null,
+    selectedFoodCount: 1,
+  };
+
+  const [state, setState] = useState(initialState);
+
   useEffect(() => {
     dispatch({ type: foodsActionTypes.FETCHING });
     fetchFoods(match.params.restaurantsId).then((data) => {
@@ -69,7 +78,7 @@ export const Foods = ({ match }) => {
         },
       });
     });
-  }, []);
+  }, [match.params.restaurantsId]);
 
   return (
     <>
@@ -99,13 +108,31 @@ export const Foods = ({ match }) => {
             <ItemWrapper key={food.id}>
               <FoodWrapper
                 food={food}
-                onClickFoodWrapper={(food) => console.log(food)}
+                onClickFoodWrapper={(food) =>
+                  setState({
+                    ...state,
+                    isOpenOrderDialog: true,
+                    selectedFood: food,
+                  })
+                }
                 imageUrl={FoodImage}
               />
             </ItemWrapper>
           ))
         )}
       </FoodsList>
+      {state.isOpenOrderDialog && (
+        <FoodOrderDialog
+          food={state.selectedFood}
+          isOpen={state.isOpenOrderDialog}
+          onClose={() =>
+            setState({
+              ...state,
+              isOpenOrderDialog: false,
+            })
+          }
+        />
+      )}
     </>
   );
 };
