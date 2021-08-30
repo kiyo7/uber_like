@@ -37,3 +37,14 @@ export const replaceLineFoods = (params) => {
 // PATCH:リソースの部分的な更新
 
 // ↑ここでのリソースは仮注文のデータのことを指す
+
+export const fetchLineFoods = () => {
+  return axios
+    .get(lineFoods)
+    .then((res) => {
+      return res.data;
+    })
+    .catch((e) => {
+      throw e;
+    });
+};
