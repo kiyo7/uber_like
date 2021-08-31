@@ -6,11 +6,22 @@ module Api
       def index
         line_foods = LineFood.active #全てのLineFoodモデルの中から、active: trueのものを取得して、line_foodsという変数に代入している
         if line_foods.exists? #line_foodsが空かどうか？をチェック
+
+          line_food_ids = []
+          count = 0
+          amount = 0
+
+          line_foods.each do |line_food|
+            line_food_ids << line_food.id # <<はpushメソッド見たいな感じ(要素を破壊的に追加)
+            count += line_food[:count] #countの合計
+            amount += line_food.total_amount #total_amountを合計
+          end
+
           render json: {
-            line_food_ids: line_foods.map { |line_food| line_food.id},
+            line_food_ids: line_food_ids,
             restaurant: line_foods[0].restaurant,
-            count: line_foods.sum { |line_food| line_food[:count] },
-            amount: line_foods.sum { |line_food| line_food.total_amount },
+            count: count,
+            amount: amount,
           }, status: :ok
           else
             render json: {}, status: :no_content

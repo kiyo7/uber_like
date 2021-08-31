@@ -25,16 +25,7 @@ import { REQUEST_STATE } from '../constants';
 import { OrderDetailItem } from '../components/OrderDetailItem';
 import { OrderButton } from '../components/Buttons/OrderButton';
 import CircularProgress from '@material-ui/core/CircularProgress';
-
-const HeaderWrapper = styled.div`
-  display: flex;
-  justify-content: flex-start;
-  padding: 8px 32px;
-`;
-
-const MainLogoImage = styled.img`
-  height: 90px;
-`;
+import { HeaderWrapper, MainLogoImage } from '../components/StyledHeader';
 
 const OrderListWrapper = styled.div`
   display: flex;
@@ -84,6 +75,10 @@ export const Orders = () => {
     }
   };
 
+  const isExistsLineFoodsSummary = () => {
+    return state.fetchState === REQUEST_STATE.OK && !state.lineFoodsSummary;
+  };
+
   return (
     <>
       <HeaderWrapper>
@@ -126,8 +121,7 @@ export const Orders = () => {
                 {orderButtonLabel()}
               </OrderButton>
             )}
-            {state.fetchState === REQUEST_STATE.OK &&
-              !state.lineFoodsSummary && <p>注文予定の商品はありません。</p>}
+            {isExistsLineFoodsSummary() && <p>注文予定の商品はありません。</p>}
           </div>
         </div>
       </OrderListWrapper>
